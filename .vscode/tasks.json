@@ -1,0 +1,97 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build: Hitster Custom Cards XAPK",
+      "detail": "Reconstruit le XAPK patché depuis original\\HITSTER (4.1.0).xapk",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "& '${workspaceFolder}\\patch\\rebuild.ps1'"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install only: current XAPK (adb)",
+      "detail": "Installe directement output/HITSTER-4.1.0-custom-cards.xapk sur l'appareil connecté, sans reconstruction.",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$xapk='output/HITSTER-4.1.0-custom-cards.xapk'; if(-not (Test-Path $xapk)){throw \"XAPK introuvable: $xapk\"}; $tmp=Join-Path $env:TEMP 'hitster-custom-install'; Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue; Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory((Resolve-Path $xapk).Path, $tmp); $apks=@((Join-Path $tmp 'nl.jumbo.hitster.apk'))+(Get-ChildItem (Join-Path $tmp 'config.*.apk') | ForEach-Object FullName); $adb=(Get-Command adb -ErrorAction SilentlyContinue).Source; if(-not $adb){$sdk=if($env:ANDROID_HOME){$env:ANDROID_HOME}else{Join-Path $env:LOCALAPPDATA 'Android\\Sdk'}; $adb=Join-Path $sdk 'platform-tools\\adb.exe'}; if(-not (Test-Path $adb)){throw \"adb introuvable: $adb\"}; & $adb install-multiple -r $apks; if($LASTEXITCODE -ne 0){throw \"adb a echoue (code $LASTEXITCODE)\"}; exit 0"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build + Install: connected device (adb)",
+      "detail": "Reconstruit le XAPK puis l'installe sur l'appareil adb connecté.",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$xapk='output/HITSTER-4.1.0-custom-cards.xapk'; if(-not (Test-Path $xapk)){throw \"XAPK introuvable: $xapk\"}; $tmp=Join-Path $env:TEMP 'hitster-custom-install'; Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue; Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory((Resolve-Path $xapk).Path, $tmp); $apks=@((Join-Path $tmp 'nl.jumbo.hitster.apk'))+(Get-ChildItem (Join-Path $tmp 'config.*.apk') | ForEach-Object FullName); $adb=(Get-Command adb -ErrorAction SilentlyContinue).Source; if(-not $adb){$sdk=if($env:ANDROID_HOME){$env:ANDROID_HOME}else{Join-Path $env:LOCALAPPDATA 'Android\\Sdk'}; $adb=Join-Path $sdk 'platform-tools\\adb.exe'}; if(-not (Test-Path $adb)){throw \"adb introuvable: $adb\"}; & $adb install-multiple -r $apks; if($LASTEXITCODE -ne 0){throw \"adb a echoue (code $LASTEXITCODE)\"}; exit 0"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": [
+        "Build: Hitster Custom Cards XAPK"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean: temporary build files",
+      "detail": "Supprime decoded/, extracted/ et les APK intermédiaires (garde le XAPK final).",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$paths = @('decoded','extracted','output\\signed','output\\splits','output\\nl.jumbo.hitster.modified.apk'); foreach ($p in $paths) { if (Test-Path -LiteralPath $p) { Remove-Item -LiteralPath $p -Recurse -Force } }; Write-Host 'Temporary build files removed.'"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

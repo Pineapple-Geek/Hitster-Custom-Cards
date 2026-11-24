@@ -1,0 +1,68 @@
+HITSTER CUSTOM CARDS 4.1.0
+==========================
+
+Fichier livré : HITSTER-4.1.0-custom-cards.xapk
+L'application s'affiche sous le nom « Hitster Custom Cards » dans le lanceur.
+
+Ce qu'a fait le patch
+---------------------
+Le scanner QR d'origine ne reconnaissait que les QR « officiels » Hitster
+(uqr.to / app.hitsternordics.com / codes des decks). Les cartes générées par
+https://hitster-card-generator.streamlit.app/ contiennent un lien du type :
+
+    https://open.spotify.com/track/<ID>?si=...
+
+Le patch ajoute la reconnaissance de ces liens (et de `spotify:track:<ID>`)
+dans la recherche de morceau : l'ID Spotify est extrait puis envoyé directement
+au lecteur, comme une carte Hitster normale. Les cartes d'origine restent
+reconnues : il n'y a pas à choisir entre les deux, les deux formats marchent
+dans le même écran de scan.
+
+Important : le patch ne crée pas de nouvel élément de menu « Mode perso ».
+Il rend le mode de jeu existant compatible avec vos cartes. Si vous voulez
+un vrai bouton dédié dans l'interface, dites-le moi, je peux continuer.
+
+Installation
+------------
+1. La signature a changé (keypair local `tools/custom-cards.jks`). Il faut
+   DÉSINSTALLER l'application Hitster d'origine avant d'installer cette
+   version, sinon Android refusera la mise à jour.
+2. Installez le XAPK avec un installateur XAPK (APKMirror Installer, SAI,
+   etc.). Pour une installation via adb, décompressez d'abord le XAPK dans
+   un dossier, puis :
+
+       $dir = '<dossier où vous avez décompressé le XAPK>'
+       $apks = @((Join-Path $dir 'nl.jumbo.hitster.apk')) +
+               (Get-ChildItem (Join-Path $dir 'config.*.apk') | ForEach-Object FullName)
+       adb install-multiple $apks
+
+   (tous les APK du XAPK sont déjà signés avec la même clé.)
+3. Refaites l'onboarding (choix Spotify / Apple Music). Pour vos cartes,
+   sélectionnez SPOTIFY : les QR encodent des morceaux Spotify.
+4. Lancez une partie normale et scannez vos cartes imprimées.
+
+Notes
+-----
+- Version : 4.1.0 (versionCode 121), package conservé : nl.jumbo.hitster.
+- Libellé de l'application : « Hitster Custom Cards » (aussi dans le manifeste
+  du XAPK). Le XAPK d'origine se trouve dans `original/`.
+- Voir `README.md` à la racine du projet pour la documentation complète
+  (installation, reconstruction, structure, prérequis).
+- Une connexion Internet est nécessaire (le morceau est diffusé depuis Spotify).
+- L'année affichée au dos de vos cartes n'est pas dans la base Hitster : l'app
+  jouera le morceau, mais n'aura pas les infos de la carte officielle.
+- Les préférences locales sont perdues lors de la réinstallation (signature
+  différente).
+- Modification destinée à un usage personnel sur une application que vous
+  possédez ; Hitster/Jumbo ne sont pas affiliés à ce patch.
+
+Reconstruire
+------------
+Depuis VS Code : `Ctrl+Maj+B` lance la tâche « Build: Hitster Custom Cards XAPK »
+(par défaut). Les autres tâches sont dans `.vscode\tasks.json` :
+- Install only: current XAPK (adb) (installe directement, sans reconstruire)
+- Build + Install: connected device (adb) (reconstruit puis installe)
+- Clean: temporary build files
+
+En ligne de commande : `powershell -ExecutionPolicy Bypass -File patch\rebuild.ps1`.
+Le script lit `original\HITSTER (4.1.0).xapk`.
